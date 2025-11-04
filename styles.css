@@ -1,0 +1,304 @@
+:root {
+    --cards-per-row: 7;
+    --base-card-width: 200px;
+    --base-image-height: 180px;
+    --card-min-width: calc(var(--base-card-width) * 5 / var(--cards-per-row));
+    --image-height: calc(var(--base-image-height) * 5 / var(--cards-per-row));
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: dimgray;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width), 1fr));
+    gap: 20px;
+}
+
+.series-header-full {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+}
+
+.series-header-full h2 {
+    font-size: 24px;
+    color: #333;
+    padding-left: 15px;
+    border-left: 5px solid #E60012;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.series-header-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.series-title {
+    font-size: 24px;
+}
+
+.series-counter {
+    font-size: 18px;
+    color: #666;
+    font-weight: normal;
+    margin-right: 10px;
+}
+
+.unboxed-count {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+.sealed-count {
+    color: #ffa726;
+    font-weight: bold;
+}
+
+.owned-count {
+    color: #333;
+    font-weight: bold;
+}
+
+.series-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.series-btn {
+    padding: 6px 12px;
+    border: 2px solid;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.btn-not-owned {
+    border-color: #999;
+    color: #666;
+}
+
+.btn-not-owned:hover {
+    background: #999;
+    color: white;
+}
+
+.btn-unboxed {
+    border-color: #4caf50;
+    color: #4caf50;
+}
+
+.btn-unboxed:hover {
+    background: #4caf50;
+    color: white;
+}
+
+.btn-sealed {
+    border-color: #ffa726;
+    color: #ffa726;
+}
+
+.btn-sealed:hover {
+    background: #ffa726;
+    color: white;
+}
+
+.series-spacer {
+    grid-column: 1 / -1;
+    height: 30px;
+}
+
+.amiibo-card {
+    border: 3px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    user-select: none;
+}
+
+.amiibo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.amiibo-card.state-0 {
+    border-color: #ccc;
+    background: #f5f5f5;
+}
+
+.amiibo-card.state-1 {
+    border-color: #4caf50;
+    background: #e8f5e9;
+}
+
+.amiibo-card.state-2 {
+    border-color: #ffa726;
+    background: #fff3e0;
+}
+
+.image-container {
+    width: 100%;
+    height: var(--image-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.placeholder-image {
+    width: 100%;
+    height: 100%;
+    background: lightgray;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #999;
+}
+
+.amiibo-name {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 14px;
+}
+
+.state-0 .amiibo-name {
+    color: #999;
+}
+
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #333;
+    margin: 0;
+}
+
+.amiibo-logo {
+    height: 50px;
+    width: auto;
+}
+
+.legend {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #333;
+}
+
+.legend-box {
+    width: 24px;
+    height: 24px;
+    border: 2px solid;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.legend-box::after {
+    content: '×';
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.legend-box.grey {
+    background: #999;
+    border-color: #999;
+}
+
+.legend-box.green {
+    background: #4caf50;
+    border-color: #4caf50;
+}
+
+.legend-box.gold {
+    background: #ffa726;
+    border-color: #ffa726;
+}
+
+.overall-counter {
+    font-size: 16px;
+    color: #666;
+    font-weight: normal;
+    padding: 8px 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+}
+
+.overall-counter .unboxed-count {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+.overall-counter .sealed-count {
+    color: #ffa726;
+    font-weight: bold;
+}

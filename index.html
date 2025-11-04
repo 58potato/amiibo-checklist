@@ -14,21 +14,27 @@
             <img src="images/logo.png" alt="amiibo" class="amiibo-logo">
             Checklist
         </h1>
-        <div class="legend">
-            <div class="overall-counter">
-                Total: <span id="counter-overall">0 + 0 = 0 / 0</span>
+        <div class="header-right">
+            <div class="view-switcher">
+                <button class="view-btn active" data-view="figures">Figures</button>
+                <button class="view-btn" data-view="cards">Cards</button>
             </div>
-            <div class="legend-item">
-                <div class="legend-box grey"></div>
-                <span>Not Owned</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-box green"></div>
-                <span>Owned: Unboxed</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-box gold"></div>
-                <span>Owned: Sealed</span>
+            <div class="legend">
+                <div class="overall-counter">
+                    Total: <span id="counter-overall">0 + 0 = 0 / 0</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box grey"></div>
+                    <span>Not Owned</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box green"></div>
+                    <span>Unboxed</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box gold"></div>
+                    <span>Sealed</span>
+                </div>
             </div>
         </div>
     </div>
@@ -36,6 +42,7 @@
 </div>
 
 <script src="amiibo-data.js"></script>
+<script src="amiibo-cards-data.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

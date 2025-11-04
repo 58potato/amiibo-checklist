@@ -12,6 +12,10 @@
     box-sizing: border-box;
 }
 
+html {
+    overflow-y: scroll;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: dimgray;
@@ -235,9 +239,46 @@ h1 {
     width: auto;
 }
 
+.header-right {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.view-switcher {
+    display: flex;
+    gap: 5px;
+    background: #f5f5f5;
+    padding: 4px;
+    border-radius: 8px;
+    margin-right: 20px;
+}
+
+.view-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: #666;
+}
+
+.view-btn:hover {
+    background: #e0e0e0;
+}
+
+.view-btn.active {
+    background: #E60012;
+    color: white;
+}
+
 .legend {
     display: flex;
-    gap: 20px;
+    gap: 12px;
     align-items: center;
     flex-wrap: wrap;
 }
@@ -245,26 +286,27 @@ h1 {
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: 6px;
+    font-size: 13px;
     color: #333;
 }
 
 .legend-box {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border: 2px solid;
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .legend-box::after {
     content: '×';
     color: white;
     font-weight: bold;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1;
 }
 
@@ -291,6 +333,9 @@ h1 {
     background: #f5f5f5;
     border-radius: 8px;
     border: 2px solid #ddd;
+    white-space: nowrap;
+    min-width: 220px;
+    text-align: center;
 }
 
 .overall-counter .unboxed-count {

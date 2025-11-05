@@ -311,6 +311,9 @@ const amiibos = [
     { id: 'monster_hunter_13', name: 'Palamute – Canyne Malzeno', series: 'monster_hunter' },
     { id: 'monster_hunter_14', name: 'Malzeno', series: 'monster_hunter' },
     { id: 'monster_hunter_15', name: 'Palico – Felyne Malzeno', series: 'monster_hunter' },
+    { id: 'monster_hunter_16', name: 'Ratha', series: 'monster_hunter' },
+    { id: 'monster_hunter_17', name: 'Rudy', series: 'monster_hunter' },
+    { id: 'monster_hunter_18', name: 'Ratha V', series: 'monster_hunter' },
 
     // Shovel Knight Series
     { id: 'shovel_knight_01', name: 'Shovel Knight', series: 'shovel_knight' },

@@ -334,7 +334,7 @@ h1 {
     border-radius: 8px;
     border: 2px solid #ddd;
     white-space: nowrap;
-    min-width: 220px;
+    width: 250px;
     text-align: center;
 }
 

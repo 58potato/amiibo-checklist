@@ -12,17 +12,20 @@
     <div class="header-section">
         <h1>
             <img src="images/logo.png" alt="amiibo" class="amiibo-logo">
-            Checklist
         </h1>
-        <div class="header-right">
+
+        <div class="header-controls">
             <div class="view-switcher">
                 <button class="view-btn active" data-view="figures">Figures</button>
                 <button class="view-btn" data-view="cards">Cards</button>
             </div>
+            <div class="overall-counter">
+                Total: <span id="counter-overall">0 + 0 = 0 / 0</span>
+            </div>
+        </div>
+
+        <div class="header-bottom">
             <div class="legend">
-                <div class="overall-counter">
-                    Total: <span id="counter-overall">0 + 0 = 0 / 0</span>
-                </div>
                 <div class="legend-item">
                     <div class="legend-box grey"></div>
                     <span>Not Owned</span>
@@ -36,9 +39,49 @@
                     <span>Sealed</span>
                 </div>
             </div>
+            <div class="data-controls">
+                <button class="control-btn export-btn" id="exportBtn">Export Data</button>
+                <button class="control-btn import-btn" id="importBtn">Import Data</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+            </div>
         </div>
     </div>
+
     <div class="grid" id="amiiboGrid"></div>
+</div>
+
+<button class="scroll-to-top" id="scrollToTopBtn" aria-label="Scroll to top">
+    <img src="images/arrow_up.png" alt="Scroll to top">
+</button>
+
+<div id="exportModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Export Data</h2>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Copy the JSON data below or download it as a file:</p>
+            <textarea id="exportData" readonly></textarea>
+            <div class="modal-actions">
+                <button class="control-btn copy-btn" id="copyBtn">Copy to Clipboard</button>
+                <button class="control-btn download-btn" id="downloadBtn">Download File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="messageModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="messageTitle">Import Data</h2>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="messageText"></p>
+            <div class="modal-actions" id="messageActions"></div>
+        </div>
+    </div>
 </div>
 
 <script src="amiibo-data.js"></script>

@@ -27,7 +27,7 @@ const series = [
     { id: 'street_fighter', name: 'Street Fighter Series', color: '#09BEC4' }
 ];
 
-const amiibos = [
+const amiibo = [
     // Super Smash Bros. Series
     { id: 'smash_01', name: 'Mario', series: 'smash' },
     { id: 'smash_02', name: 'Peach', series: 'smash' },

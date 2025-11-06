@@ -20,6 +20,13 @@ It is purely for personal use.
 
 ## Version History
 
+### v.1.2 - 2025-11-06
+- Added an exporting/importing function.
+- Added a "go to top" button.
+
+#### v1.1.1 - 2025-11-05
+- Added the 3 new "Monster Hunter Stories 3" amiibo.
+
 ### v1.1 - 2025-11-05
 - Added amiibo cards to the checklist.
 

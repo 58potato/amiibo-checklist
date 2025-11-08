@@ -14,6 +14,8 @@
 
 html {
     overflow-y: scroll;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
@@ -21,6 +23,7 @@ body {
     background: dimgray;
     min-height: 100vh;
     padding: 20px;
+    touch-action: manipulation;
 }
 
 .container {
@@ -40,11 +43,14 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .amiibo-logo {
     height: 50px;
     width: auto;
+    max-width: 100%;
+    object-fit: contain;
 }
 
 .header-section {
@@ -78,6 +84,7 @@ h1 {
     transition: all 0.2s ease;
     background: transparent;
     color: #666;
+    touch-action: manipulation;
 }
 
 .view-btn:hover {
@@ -189,6 +196,7 @@ h1 {
     cursor: pointer;
     transition: all 0.2s ease;
     background: white;
+    touch-action: manipulation;
 }
 
 .export-btn {
@@ -239,14 +247,18 @@ h1 {
 
 .series-header-full {
     grid-column: 1 / -1;
-    margin-top: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.series-header-full.collapsed {
+    margin-bottom: 0;
 }
 
 .series-header-full h2 {
     font-size: 24px;
     color: #333;
     padding-left: 15px;
-    border-left: 5px solid #E60012;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -256,10 +268,26 @@ h1 {
 
 .series-header-content {
     display: flex;
-    align-items: center;
-    gap: 15px;
+    align-items: baseline;
+    gap: 20px;
     flex-wrap: wrap;
     flex: 1;
+}
+
+.collapse-arrow {
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 10px solid #E60012;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    cursor: pointer;
+    transform: rotate(90deg);
+}
+
+.collapse-arrow.collapsed {
+    transform: rotate(0deg);
 }
 
 .series-title {
@@ -288,6 +316,35 @@ h1 {
     font-weight: bold;
 }
 
+.completion-count {
+    font-weight: bold;
+    font-size: 18px;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.completion-count.green {
+    color: #4caf50;
+}
+
+.completion-count.gold {
+    color: #ffa726;
+}
+
+.completion-star {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.completion-star.green {
+    color: #4caf50;
+}
+
+.completion-star.gold {
+    color: #ffa726;
+}
+
 .series-buttons {
     display: flex;
     gap: 8px;
@@ -303,6 +360,7 @@ h1 {
     cursor: pointer;
     transition: all 0.2s ease;
     background: white;
+    touch-action: manipulation;
 }
 
 .btn-not-owned {
@@ -337,7 +395,7 @@ h1 {
 
 .series-spacer {
     grid-column: 1 / -1;
-    height: 30px;
+    height: 10px;
 }
 
 .amiibo-card {
@@ -349,6 +407,7 @@ h1 {
     transition: all 0.3s ease;
     background: white;
     user-select: none;
+    touch-action: manipulation;
 }
 
 .amiibo-card:hover {
@@ -477,6 +536,7 @@ h1 {
     cursor: pointer;
     line-height: 1;
     transition: color 0.2s ease;
+    touch-action: manipulation;
 }
 
 .close-modal:hover {
@@ -524,6 +584,18 @@ h1 {
     font-weight: bold;
 }
 
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .scroll-to-top {
     position: fixed;
     bottom: 30px;
@@ -543,12 +615,14 @@ h1 {
     align-items: center;
     justify-content: center;
     padding: 0;
+    touch-action: manipulation;
 }
 
 .scroll-to-top img {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    pointer-events: none;
 }
 
 .scroll-to-top.visible {
@@ -568,4 +642,98 @@ h1 {
 
 .scroll-to-top:active {
     transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    .amiibo-logo {
+        height: 40px;
+    }
+
+    .overall-counter {
+        min-width: auto;
+        font-size: 14px;
+    }
+
+    .series-title {
+        font-size: 20px;
+    }
+
+    .series-counter {
+        font-size: 16px;
+    }
+
+    .completion-count {
+        font-size: 18px;
+    }
+
+    .completion-star {
+        font-size: 20px;
+    }
+
+    .scroll-to-top {
+        width: 45px;
+        height: 45px;
+        bottom: 20px;
+        right: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    h1 {
+        font-size: 20px;
+        gap: 5px;
+    }
+
+    .amiibo-logo {
+        height: 35px;
+    }
+
+    .header-controls {
+        gap: 10px;
+    }
+
+    .overall-counter {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+
+    .series-title {
+        font-size: 18px;
+    }
+
+    .series-counter {
+        font-size: 14px;
+    }
+
+    .completion-count {
+        font-size: 16px;
+    }
+
+    .completion-star {
+        font-size: 18px;
+    }
+
+    .scroll-to-top {
+        width: 40px;
+        height: 40px;
+        bottom: 15px;
+        right: 15px;
+    }
 }

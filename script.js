@@ -2,24 +2,21 @@ let currentView = 'figures';
 let amiiboStatesFigures = {};
 let amiiboStatesCards = {};
 let scrollPositions = { figures: 0, cards: 0 };
+let collapsedSeries = { figures: {}, cards: {} };
 
 function initStates() {
     const savedFigures = localStorage.getItem('amiiboStatesFigures');
     const savedCards = localStorage.getItem('amiiboStatesCards');
+    const savedCollapsed = localStorage.getItem('collapsedSeries');
 
-    if (savedFigures) {
-        amiiboStatesFigures = JSON.parse(savedFigures);
-    }
-    if (savedCards) {
-        amiiboStatesCards = JSON.parse(savedCards);
-    }
+    if (savedFigures) amiiboStatesFigures = JSON.parse(savedFigures);
+    if (savedCards) amiiboStatesCards = JSON.parse(savedCards);
+    if (savedCollapsed) collapsedSeries = JSON.parse(savedCollapsed);
 
     [amiibo, amiiboCards].forEach((list, idx) => {
         const statesObj = idx === 0 ? amiiboStatesFigures : amiiboStatesCards;
         list.forEach(amiibo => {
-            if (statesObj[amiibo.id] === undefined) {
-                statesObj[amiibo.id] = 0;
-            }
+            if (statesObj[amiibo.id] === undefined) statesObj[amiibo.id] = 0;
         });
     });
 
@@ -30,14 +27,10 @@ function initStates() {
 initStates();
 
 const savedView = sessionStorage.getItem('currentView');
-if (savedView === 'cards' || savedView === 'figures') {
-    currentView = savedView;
-}
+if (savedView === 'cards' || savedView === 'figures') currentView = savedView;
 
 const savedScrollPos = sessionStorage.getItem('scrollPositions');
-if (savedScrollPos) {
-    scrollPositions = JSON.parse(savedScrollPos);
-}
+if (savedScrollPos) scrollPositions = JSON.parse(savedScrollPos);
 
 function getCurrentData() {
     return currentView === 'figures'
@@ -47,14 +40,18 @@ function getCurrentData() {
 
 function getCounts(seriesId = null) {
     const data = getCurrentData();
-    const items = seriesId
-        ? data.amiibo.filter(a => a.series === seriesId)
-        : data.amiibo;
-
+    const items = seriesId ? data.amiibo.filter(a => a.series === seriesId) : data.amiibo;
     const unboxed = items.filter(a => data.states[a.id] === 1).length;
     const sealed = items.filter(a => data.states[a.id] === 2).length;
-
     return { unboxed, sealed, total: items.length };
+}
+
+function getSeriesCompletion(seriesId) {
+    const data = getCurrentData();
+    const items = data.amiibo.filter(a => a.series === seriesId);
+    const allCollected = items.every(a => data.states[a.id] > 0);
+    const allSealed = items.every(a => data.states[a.id] === 2);
+    return { allCollected, allSealed };
 }
 
 function updateCounters() {
@@ -64,7 +61,14 @@ function updateCounters() {
         const counterEl = document.getElementById(`counter-${seriesData.id}`);
         if (counterEl) {
             const { unboxed, sealed, total } = getCounts(seriesData.id);
-            counterEl.innerHTML = `<span class="unboxed-count">${unboxed}</span> + <span class="sealed-count">${sealed}</span> = <span class="owned-count">${unboxed + sealed}</span> / <strong>${total}</strong>`;
+            const { allCollected, allSealed } = getSeriesCompletion(seriesData.id);
+
+            if (allCollected) {
+                const starColor = allSealed ? 'gold' : 'green';
+                counterEl.innerHTML = `<span class="completion-count ${starColor}">${unboxed + sealed} <span class="completion-star ${starColor}">★</span></span>`;
+            } else {
+                counterEl.innerHTML = `<span class="unboxed-count">${unboxed}</span> + <span class="sealed-count">${sealed}</span> = <span class="owned-count">${unboxed + sealed}</span> / <strong>${total}</strong>`;
+            }
         }
     });
 
@@ -80,12 +84,9 @@ function cycleState(amiiboId) {
     data.states[amiiboId] = (data.states[amiiboId] + 1) % 3;
 
     const card = document.querySelector(`[data-amiibo-id="${amiiboId}"]`);
-    if (card) {
-        card.className = `amiibo-card state-${data.states[amiiboId]}`;
-    }
+    if (card) card.className = `amiibo-card state-${data.states[amiiboId]}`;
 
     updateCounters();
-
     localStorage.setItem('amiiboStatesFigures', JSON.stringify(amiiboStatesFigures));
     localStorage.setItem('amiiboStatesCards', JSON.stringify(amiiboStatesCards));
 }
@@ -97,15 +98,28 @@ function markAllInSeries(seriesId, state) {
     amiiboSeries.forEach(amiibo => {
         data.states[amiibo.id] = state;
         const card = document.querySelector(`[data-amiibo-id="${amiibo.id}"]`);
-        if (card) {
-            card.className = `amiibo-card state-${state}`;
-        }
+        if (card) card.className = `amiibo-card state-${state}`;
     });
 
     updateCounters();
-
     localStorage.setItem('amiiboStatesFigures', JSON.stringify(amiiboStatesFigures));
     localStorage.setItem('amiiboStatesCards', JSON.stringify(amiiboStatesCards));
+}
+
+function toggleSeriesCollapse(seriesId) {
+    const currentCollapsed = collapsedSeries[currentView];
+    currentCollapsed[seriesId] = !currentCollapsed[seriesId];
+    localStorage.setItem('collapsedSeries', JSON.stringify(collapsedSeries));
+
+    const cards = document.querySelectorAll(`[data-series-id="${seriesId}"]`);
+    const arrow = document.querySelector(`[data-arrow-series="${seriesId}"]`);
+    const header = arrow?.closest('.series-header-full');
+    const buttonsContainer = header?.querySelector('.series-buttons');
+
+    cards.forEach(card => card.style.display = currentCollapsed[seriesId] ? 'none' : 'block');
+    if (arrow) arrow.classList.toggle('collapsed', currentCollapsed[seriesId]);
+    if (header) header.classList.toggle('collapsed', currentCollapsed[seriesId]);
+    if (buttonsContainer) buttonsContainer.style.display = currentCollapsed[seriesId] ? 'none' : 'flex';
 }
 
 function createAmiiboCard(amiibo) {
@@ -115,18 +129,25 @@ function createAmiiboCard(amiibo) {
     const card = document.createElement('div');
     card.className = `amiibo-card state-${state}`;
     card.setAttribute('data-amiibo-id', amiibo.id);
+    card.setAttribute('data-series-id', amiibo.series);
 
     card.innerHTML = `
         <div class="image-container">
             <img src="images/${imagePath}/${amiibo.series}/${amiibo.id}.png" 
-                 alt="${amiibo.name}"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                 alt="${amiibo.name}">
             <div class="placeholder-image" style="display: none;">
                 ${amiibo.name}
             </div>
         </div>
         <div class="amiibo-name">${amiibo.name}</div>
     `;
+
+    const img = card.querySelector('img');
+    const placeholder = card.querySelector('.placeholder-image');
+    img.addEventListener('error', () => {
+        img.style.display = 'none';
+        placeholder.style.display = 'flex';
+    });
 
     card.addEventListener('click', (e) => {
         e.preventDefault();
@@ -141,12 +162,22 @@ function createSeriesHeader(seriesData) {
     header.className = 'series-header-full';
 
     const { unboxed, sealed, total } = getCounts(seriesData.id);
+    const { allCollected, allSealed } = getSeriesCompletion(seriesData.id);
 
     const title = document.createElement('h2');
-    title.style.borderLeftColor = seriesData.color;
-
     const headerContent = document.createElement('div');
     headerContent.className = 'series-header-content';
+
+    const collapseArrow = document.createElement('span');
+    collapseArrow.className = 'collapse-arrow';
+    collapseArrow.style.borderLeftColor = seriesData.color;
+    collapseArrow.setAttribute('data-arrow-series', seriesData.id);
+
+    const isCollapsed = collapsedSeries[currentView][seriesData.id];
+    if (isCollapsed) {
+        collapseArrow.classList.add('collapsed');
+        header.classList.add('collapsed');
+    }
 
     const titleText = document.createElement('span');
     titleText.className = 'series-title';
@@ -155,13 +186,21 @@ function createSeriesHeader(seriesData) {
     const counter = document.createElement('span');
     counter.className = 'series-counter';
     counter.id = `counter-${seriesData.id}`;
-    counter.innerHTML = `<span class="unboxed-count">${unboxed}</span> + <span class="sealed-count">${sealed}</span> = <span class="owned-count">${unboxed + sealed}</span> / <strong>${total}</strong>`;
 
+    if (allCollected) {
+        const starColor = allSealed ? 'gold' : 'green';
+        counter.innerHTML = `<span class="completion-count ${starColor}">${unboxed + sealed} <span class="completion-star ${starColor}">★</span></span>`;
+    } else {
+        counter.innerHTML = `<span class="unboxed-count">${unboxed}</span> + <span class="sealed-count">${sealed}</span> = <span class="owned-count">${unboxed + sealed}</span> / <strong>${total}</strong>`;
+    }
+
+    headerContent.appendChild(collapseArrow);
     headerContent.appendChild(titleText);
     headerContent.appendChild(counter);
 
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'series-buttons';
+    if (isCollapsed) buttonsContainer.style.display = 'none';
 
     const buttons = [
         { class: 'btn-not-owned', text: 'Mark all as Not Owned', state: 0 },
@@ -182,8 +221,12 @@ function createSeriesHeader(seriesData) {
 
     title.appendChild(headerContent);
     title.appendChild(buttonsContainer);
-    header.appendChild(title);
+    title.style.cursor = 'pointer';
+    title.addEventListener('click', (e) => {
+        if (!e.target.closest('.series-buttons')) toggleSeriesCollapse(seriesData.id);
+    });
 
+    header.appendChild(title);
     return header;
 }
 
@@ -197,8 +240,12 @@ function renderAmiibo() {
         if (amiiboSeries.length > 0) {
             grid.appendChild(createSeriesHeader(seriesData));
 
+            const isCollapsed = collapsedSeries[currentView][seriesData.id];
+
             amiiboSeries.forEach(amiibo => {
-                grid.appendChild(createAmiiboCard(amiibo));
+                const card = createAmiiboCard(amiibo);
+                if (isCollapsed) card.style.display = 'none';
+                grid.appendChild(card);
             });
 
             if (index < data.series.length - 1) {
@@ -224,10 +271,7 @@ function switchView(view) {
     });
 
     renderAmiibo();
-
-    setTimeout(() => {
-        window.scrollTo(0, scrollPositions[view]);
-    }, 0);
+    setTimeout(() => window.scrollTo(0, scrollPositions[view]), 0);
 }
 
 document.querySelectorAll('.view-btn').forEach(btn => {
@@ -262,14 +306,10 @@ function toggleScrollButton() {
 }
 
 scrollToTopBtn.addEventListener('click', () => {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 window.addEventListener('scroll', toggleScrollButton);
-
 toggleScrollButton();
 
 function exportData() {
@@ -277,19 +317,15 @@ function exportData() {
     const cardsData = {};
 
     Object.keys(amiiboStatesFigures).forEach(key => {
-        if (amiiboStatesFigures[key] !== 0) {
-            figuresData[key] = amiiboStatesFigures[key];
-        }
+        if (amiiboStatesFigures[key] !== 0) figuresData[key] = amiiboStatesFigures[key];
     });
 
     Object.keys(amiiboStatesCards).forEach(key => {
-        if (amiiboStatesCards[key] !== 0) {
-            cardsData[key] = amiiboStatesCards[key];
-        }
+        if (amiiboStatesCards[key] !== 0) cardsData[key] = amiiboStatesCards[key];
     });
 
     const exportObj = {
-        version: '1.0',
+        version: '1.4',
         exportDate: new Date().toISOString(),
         figures: figuresData,
         cards: cardsData
@@ -303,34 +339,26 @@ function importData(jsonString) {
         const importObj = JSON.parse(jsonString);
 
         if (!importObj.version || !importObj.figures || !importObj.cards) {
-            throw new Error('Invalid JSON format. Missing required fields.');
+            return { success: false, message: 'Invalid JSON format. Missing required fields.' };
         }
 
         const newFiguresStates = {};
         const newCardsStates = {};
 
-        amiibo.forEach(a => {
-            newFiguresStates[a.id] = 0;
-        });
-        amiiboCards.forEach(a => {
-            newCardsStates[a.id] = 0;
-        });
+        amiibo.forEach(a => newFiguresStates[a.id] = 0);
+        amiiboCards.forEach(a => newCardsStates[a.id] = 0);
 
         Object.keys(importObj.figures).forEach(key => {
             if (newFiguresStates.hasOwnProperty(key)) {
                 const state = parseInt(importObj.figures[key]);
-                if (state >= 0 && state <= 2) {
-                    newFiguresStates[key] = state;
-                }
+                if (state >= 0 && state <= 2) newFiguresStates[key] = state;
             }
         });
 
         Object.keys(importObj.cards).forEach(key => {
             if (newCardsStates.hasOwnProperty(key)) {
                 const state = parseInt(importObj.cards[key]);
-                if (state >= 0 && state <= 2) {
-                    newCardsStates[key] = state;
-                }
+                if (state >= 0 && state <= 2) newCardsStates[key] = state;
             }
         });
 
@@ -347,17 +375,14 @@ function importData(jsonString) {
 }
 
 function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    modal.classList.add('show');
+    document.getElementById(modalId).classList.add('show');
 }
 
 function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    modal.classList.remove('show');
+    document.getElementById(modalId).classList.remove('show');
 }
 
 function showMessage(title, message, isSuccess = true, actions = []) {
-    const messageModal = document.getElementById('messageModal');
     document.getElementById('messageTitle').textContent = title;
 
     const messageText = document.getElementById('messageText');
@@ -379,8 +404,7 @@ function showMessage(title, message, isSuccess = true, actions = []) {
 }
 
 document.getElementById('exportBtn').addEventListener('click', () => {
-    const jsonData = exportData();
-    document.getElementById('exportData').value = jsonData;
+    document.getElementById('exportData').value = exportData();
     openModal('exportModal');
 });
 
@@ -392,9 +416,7 @@ document.getElementById('copyBtn').addEventListener('click', () => {
     const btn = document.getElementById('copyBtn');
     const originalText = btn.textContent;
     btn.textContent = 'Copied!';
-    setTimeout(() => {
-        btn.textContent = originalText;
-    }, 2000);
+    setTimeout(() => btn.textContent = originalText, 2000);
 });
 
 document.getElementById('downloadBtn').addEventListener('click', () => {
@@ -439,15 +461,12 @@ document.getElementById('importFile').addEventListener('change', (e) => {
 
 document.querySelectorAll('.close-modal').forEach(closeBtn => {
     closeBtn.addEventListener('click', (e) => {
-        const modal = e.target.closest('.modal');
-        modal.classList.remove('show');
+        e.target.closest('.modal').classList.remove('show');
     });
 });
 
 document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.remove('show');
-        }
+        if (e.target === modal) modal.classList.remove('show');
     });
 });

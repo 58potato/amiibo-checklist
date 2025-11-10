@@ -21,6 +21,10 @@ It is intended purely for personal use.
 
 ## Version History
 
+### v1.4 - 2025-11-10
+- Added dark mode.
+- Added "collapse all" and "expand all" buttons.
+
 ### v1.3 - 2025-11-08
 - Added collapsible series titles for better navigation.
 - Fixed: Logo now stays in bounds when zoomed in.

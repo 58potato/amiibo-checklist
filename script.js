@@ -3,15 +3,22 @@ let amiiboStatesFigures = {};
 let amiiboStatesCards = {};
 let scrollPositions = { figures: 0, cards: 0 };
 let collapsedSeries = { figures: {}, cards: {} };
+let darkMode = false;
 
 function initStates() {
     const savedFigures = localStorage.getItem('amiiboStatesFigures');
     const savedCards = localStorage.getItem('amiiboStatesCards');
     const savedCollapsed = localStorage.getItem('collapsedSeries');
+    const savedDarkMode = localStorage.getItem('darkMode');
 
     if (savedFigures) amiiboStatesFigures = JSON.parse(savedFigures);
     if (savedCards) amiiboStatesCards = JSON.parse(savedCards);
     if (savedCollapsed) collapsedSeries = JSON.parse(savedCollapsed);
+    if (savedDarkMode !== null) {
+        darkMode = JSON.parse(savedDarkMode);
+    } else {
+        darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
 
     [amiibo, amiiboCards].forEach((list, idx) => {
         const statesObj = idx === 0 ? amiiboStatesFigures : amiiboStatesCards;
@@ -22,6 +29,50 @@ function initStates() {
 
     localStorage.setItem('amiiboStatesFigures', JSON.stringify(amiiboStatesFigures));
     localStorage.setItem('amiiboStatesCards', JSON.stringify(amiiboStatesCards));
+
+    applyDarkMode();
+}
+
+function applyDarkMode() {
+    if (darkMode) {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+
+        const lightOption = themeToggle.querySelector('[data-theme="light"]');
+        const darkOption = themeToggle.querySelector('[data-theme="dark"]');
+
+        if (lightOption && darkOption) {
+            if (darkMode) {
+                lightOption.classList.remove('active');
+                darkOption.classList.add('active');
+            } else {
+                lightOption.classList.add('active');
+                darkOption.classList.remove('active');
+            }
+        }
+    }
+
+    const logo = document.querySelector('.amiibo-logo');
+    if (logo) {
+        logo.src = darkMode ? 'images/logo_dark.png' : 'images/logo.png';
+    }
+
+    const scrollArrow = document.querySelector('#scrollToTopBtn img');
+    if (scrollArrow) {
+        scrollArrow.src = darkMode ? 'images/arrow_up_dark.png' : 'images/arrow_up.png';
+    }
+}
+
+function toggleDarkMode() {
+    darkMode = !darkMode;
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+    applyDarkMode();
 }
 
 initStates();
@@ -120,6 +171,48 @@ function toggleSeriesCollapse(seriesId) {
     if (arrow) arrow.classList.toggle('collapsed', currentCollapsed[seriesId]);
     if (header) header.classList.toggle('collapsed', currentCollapsed[seriesId]);
     if (buttonsContainer) buttonsContainer.style.display = currentCollapsed[seriesId] ? 'none' : 'flex';
+}
+
+function collapseAll() {
+    const data = getCurrentData();
+    const currentCollapsed = collapsedSeries[currentView];
+
+    data.series.forEach(seriesData => {
+        currentCollapsed[seriesData.id] = true;
+
+        const cards = document.querySelectorAll(`[data-series-id="${seriesData.id}"]`);
+        const arrow = document.querySelector(`[data-arrow-series="${seriesData.id}"]`);
+        const header = arrow?.closest('.series-header-full');
+        const buttonsContainer = header?.querySelector('.series-buttons');
+
+        cards.forEach(card => card.style.display = 'none');
+        if (arrow) arrow.classList.add('collapsed');
+        if (header) header.classList.add('collapsed');
+        if (buttonsContainer) buttonsContainer.style.display = 'none';
+    });
+
+    localStorage.setItem('collapsedSeries', JSON.stringify(collapsedSeries));
+}
+
+function expandAll() {
+    const data = getCurrentData();
+    const currentCollapsed = collapsedSeries[currentView];
+
+    data.series.forEach(seriesData => {
+        currentCollapsed[seriesData.id] = false;
+
+        const cards = document.querySelectorAll(`[data-series-id="${seriesData.id}"]`);
+        const arrow = document.querySelector(`[data-arrow-series="${seriesData.id}"]`);
+        const header = arrow?.closest('.series-header-full');
+        const buttonsContainer = header?.querySelector('.series-buttons');
+
+        cards.forEach(card => card.style.display = 'block');
+        if (arrow) arrow.classList.remove('collapsed');
+        if (header) header.classList.remove('collapsed');
+        if (buttonsContainer) buttonsContainer.style.display = 'flex';
+    });
+
+    localStorage.setItem('collapsedSeries', JSON.stringify(collapsedSeries));
 }
 
 function createAmiiboCard(amiibo) {
@@ -309,8 +402,18 @@ scrollToTopBtn.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
+scrollToTopBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTopBtn.blur();
+});
+
 window.addEventListener('scroll', toggleScrollButton);
 toggleScrollButton();
+
+document.getElementById('collapseAllBtn')?.addEventListener('click', collapseAll);
+document.getElementById('expandAllBtn')?.addEventListener('click', expandAll);
+document.getElementById('themeToggle')?.addEventListener('click', toggleDarkMode);
 
 function exportData() {
     const figuresData = {};

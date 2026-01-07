@@ -21,6 +21,10 @@ It is intended purely for personal use.
 
 ## Version History
 
+### v1.4 - 2025-11-10
+- Added dark mode.
+- Added "Collapse All" and "Expand All" buttons.
+
 ### v1.3 - 2025-11-08
 - Added collapsible series titles for better navigation.
 - Fixed: Logo now stays in bounds when zoomed in.
@@ -30,7 +34,7 @@ It is intended purely for personal use.
 - Added a “Back to Top” button for quick navigation.
 
 #### v1.1.1 - 2025-11-05
-- Added the 3 new **Monster Hunter Stories 3** amiibo.
+- Added the 3 new **Monster Hunter Stories 3** Series amiibo.
 
 ### v1.1 - 2025-11-05
 - Added amiibo cards to the checklist.

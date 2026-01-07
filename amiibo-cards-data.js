@@ -8,10 +8,10 @@ const cardSeries = [
     { id: 'ac_cards_welcome', name: 'Animal Crossing - Welcome amiibo Cards', color: '#F78121' },
     { id: 'ac_cards_sanrio', name: 'Animal Crossing - Sanrio Cards', color: '#EB5E89' },
     { id: 'pokken', name: 'Pokkén Tournament Series', color: '#1686DA' },
-    { id: 'mario_sport', name: 'Mario Sport Superstars Series', color: '#363636' },
+    { id: 'mario_sport', name: 'Mario Sport Superstars Series', color: '#5B5B5B' },
     { id: 'baseball', name: 'Jikkyō Powerful Pro Baseball Series', color: '#A5A5A5' },
     { id: 'yugioh', name: 'Yu-Gi-Oh! Rush Duel Series', color: '#B86737' },
-    { id: 'street_fighter_cards', name: 'Street Fighter Cards Series', color: '#331701' },
+    { id: 'street_fighter_cards', name: 'Street Fighter Cards Series', color: '#70314E' },
 ];
 
 const amiiboCards = [
@@ -701,6 +701,4 @@ const amiiboCards = [
     { id: 'street_fighter_cards_58', name: 'C.Viper', series: 'street_fighter_cards' },
     { id: 'street_fighter_cards_59', name: 'Alex', series: 'street_fighter_cards' },
     { id: 'street_fighter_cards_60', name: 'Ingrid', series: 'street_fighter_cards' },
-
-
 ];

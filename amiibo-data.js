@@ -21,7 +21,7 @@ const series = [
     { id: 'boxboy', name: 'Goodbye! BoxBoy! Series', color: '#777777' },
     { id: 'chibi_robo', name: 'Chibi-Robo Series', color: '#8B8A8E' },
     { id: 'detective_pikachu', name: 'Detective Pikachu Series', color: '#965310' },
-    { id: 'dark_souls', name: 'Dark Souls Series', color: '#404040' },
+    { id: 'dark_souls', name: 'Dark Souls Series', color: '#585858' },
     { id: 'diablo', name: 'Diablo Series', color: '#B8381B' },
     { id: 'mega_man', name: 'Mega Man Series', color: '#81A893' },
     { id: 'street_fighter', name: 'Street Fighter Series', color: '#09BEC4' }
@@ -283,7 +283,7 @@ const amiibo = [
     // Metroid Series
     { id: 'metroid_01', name: 'Samus Aran', series: 'metroid' },
     { id: 'metroid_02', name: 'Metroid', series: 'metroid' },
-    { id: 'metroid_03', name: 'Samus', series: 'metroid' },
+    { id: 'metroid_03', name: 'Samus (Metroid Dread)', series: 'metroid' },
     { id: 'metroid_04', name: 'E.M.M.I', series: 'metroid' },
     { id: 'metroid_05', name: 'Samus (Metroid Prime 4)', series: 'metroid' },
     { id: 'metroid_06', name: 'Samus & Vi-O-La', series: 'metroid' },

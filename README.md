@@ -25,6 +25,9 @@ It is intended purely for personal use.
 
 ## Version History
 
+#### v1.5.2 - 2026-01-07
+- Fixed an issue with the checklist not saving progress.
+
 #### v1.5.1 - 2026-01-07
 - Added missing dark mode images.
 

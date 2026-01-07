@@ -10,8 +10,54 @@ let filters = {
     state: '',
 };
 
+const STORAGE_KEYS = {
+    FIGURES: 'amiiboStatesFigures',
+    CARDS: 'amiiboStatesCards',
+    DARK_MODE: 'amiiboChecklist_darkMode',
+    COLLAPSED_SERIES: 'amiiboChecklist_collapsedSeries'
+};
+
+function saveToLocalStorage() {
+    try {
+        localStorage.setItem(STORAGE_KEYS.FIGURES, JSON.stringify(amiiboStatesFigures));
+        localStorage.setItem(STORAGE_KEYS.CARDS, JSON.stringify(amiiboStatesCards));
+        localStorage.setItem(STORAGE_KEYS.DARK_MODE, JSON.stringify(darkMode));
+        localStorage.setItem(STORAGE_KEYS.COLLAPSED_SERIES, JSON.stringify(collapsedSeries));
+    } catch (e) {
+        console.error('Error saving to localStorage:', e);
+    }
+}
+
+function loadFromLocalStorage() {
+    try {
+        const savedFigures = localStorage.getItem(STORAGE_KEYS.FIGURES);
+        const savedCards = localStorage.getItem(STORAGE_KEYS.CARDS);
+        const savedDarkMode = localStorage.getItem(STORAGE_KEYS.DARK_MODE);
+        const savedCollapsedSeries = localStorage.getItem(STORAGE_KEYS.COLLAPSED_SERIES);
+
+        if (savedFigures) {
+            amiiboStatesFigures = JSON.parse(savedFigures);
+        }
+        if (savedCards) {
+            amiiboStatesCards = JSON.parse(savedCards);
+        }
+        if (savedDarkMode !== null) {
+            darkMode = JSON.parse(savedDarkMode);
+        }
+        if (savedCollapsedSeries) {
+            collapsedSeries = JSON.parse(savedCollapsedSeries);
+        }
+    } catch (e) {
+        console.error('Error loading from localStorage:', e);
+    }
+}
+
 function initStates() {
-    darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    loadFromLocalStorage();
+
+    if (!localStorage.getItem(STORAGE_KEYS.DARK_MODE)) {
+        darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
 
     [amiibo, amiiboCards].forEach((list, idx) => {
         const statesObj = idx === 0 ? amiiboStatesFigures : amiiboStatesCards;
@@ -21,6 +67,7 @@ function initStates() {
     });
 
     applyDarkMode();
+    saveToLocalStorage();
 }
 
 function applyDarkMode() {
@@ -62,6 +109,7 @@ function applyDarkMode() {
 function toggleDarkMode() {
     darkMode = !darkMode;
     applyDarkMode();
+    saveToLocalStorage();
 }
 
 initStates();
@@ -127,6 +175,7 @@ function cycleState(amiiboId) {
     if (card) card.className = `amiibo-card state-${data.states[amiiboId]}`;
 
     updateCounters();
+    saveToLocalStorage();
 }
 
 function markAllInSeries(seriesId, state) {
@@ -142,6 +191,7 @@ function markAllInSeries(seriesId, state) {
     });
 
     updateCounters();
+    saveToLocalStorage();
 }
 
 function toggleSeriesCollapse(seriesId) {
@@ -157,6 +207,8 @@ function toggleSeriesCollapse(seriesId) {
     if (arrow) arrow.classList.toggle('collapsed', currentCollapsed[seriesId]);
     if (header) header.classList.toggle('collapsed', currentCollapsed[seriesId]);
     if (buttonsContainer) buttonsContainer.style.display = currentCollapsed[seriesId] ? 'none' : 'flex';
+
+    saveToLocalStorage();
 }
 
 function matchesFilters(amiibo) {
@@ -525,6 +577,7 @@ function importData(jsonString) {
 
         amiiboStatesFigures = newFiguresStates;
         amiiboStatesCards = newCardsStates;
+        saveToLocalStorage();
         renderAmiibo();
 
         return { success: true, message: 'Data imported successfully!' };
@@ -536,6 +589,7 @@ function importData(jsonString) {
 function resetAllData() {
     amiibo.forEach(a => amiiboStatesFigures[a.id] = 0);
     amiiboCards.forEach(a => amiiboStatesCards[a.id] = 0);
+    saveToLocalStorage();
     renderAmiibo();
 }
 

@@ -5,10 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>amiibo Checklist</title>
     <link rel="icon" type="image/png" href="images/favicon.png">
-    <link rel="stylesheet" href="styles.css?v=1.4">
+    <link rel="stylesheet" href="styles.css?v=1.5">
 </head>
 <body>
 <div class="container">
+    <div class="theme-toggle" id="themeToggle" data-theme="light">
+        <div class="theme-toggle-track">
+            <div class="theme-toggle-slider"></div>
+            <div class="theme-option" data-theme="light">
+                <span>Light</span>
+            </div>
+            <div class="theme-option" data-theme="dark">
+                <span>Dark</span>
+            </div>
+        </div>
+    </div>
+
     <div class="header-section">
         <h1>
             <img src="images/logo.png" alt="amiibo" class="amiibo-logo">
@@ -21,6 +33,22 @@
             </div>
             <div class="overall-counter">
                 Total: <span id="counter-overall">0 + 0 = 0 / 0</span>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-row">
+                <input type="text" id="nameSearch" class="filter-input" placeholder="Search by name...">
+                <select id="seriesFilter" class="filter-select">
+                    <option value="">All Series</option>
+                </select>
+                <select id="stateFilter" class="filter-select">
+                    <option value="">All States</option>
+                    <option value="0">Not Owned</option>
+                    <option value="1">Unboxed</option>
+                    <option value="2">Sealed</option>
+                </select>
+                <button class="control-btn reset-filters-btn" id="resetFiltersBtn">Reset Filters</button>
             </div>
         </div>
 
@@ -40,23 +68,9 @@
                 </div>
             </div>
             <div class="data-controls">
-                <button class="control-btn collapse-btn" id="collapseAllBtn">Collapse All</button>
-                <button class="control-btn collapse-btn" id="expandAllBtn">Expand All</button>
-                <div class="theme-toggle" id="themeToggle" data-theme="light">
-                    <div class="theme-toggle-track">
-                        <div class="theme-toggle-slider"></div>
-                        <div class="theme-option" data-theme="light">
-                            <span>Light</span>
-                        </div>
-                        <div class="theme-option" data-theme="dark">
-                            <span>Dark</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="data-controls">
                 <button class="control-btn export-btn" id="exportBtn">Export Data</button>
                 <button class="control-btn import-btn" id="importBtn">Import Data</button>
+                <button class="control-btn delete-btn" id="deleteBtn">Delete Data</button>
                 <input type="file" id="importFile" accept=".json" style="display: none;">
             </div>
         </div>
@@ -100,8 +114,8 @@
     </div>
 </div>
 
-<script src="amiibo-data.js?v=1.4"></script>
-<script src="amiibo-cards-data.js?v=1.4"></script>
-<script src="script.js?v=1.4"></script>
+<script src="amiibo-data.js?v=1.5"></script>
+<script src="amiibo-cards-data.js?v=1.5"></script>
+<script src="script.js?v=1.5"></script>
 </body>
 </html>

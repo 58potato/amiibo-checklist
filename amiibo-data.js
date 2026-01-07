@@ -24,7 +24,8 @@ const series = [
     { id: 'dark_souls', name: 'Dark Souls Series', color: '#585858' },
     { id: 'diablo', name: 'Diablo Series', color: '#B8381B' },
     { id: 'mega_man', name: 'Mega Man Series', color: '#81A893' },
-    { id: 'street_fighter', name: 'Street Fighter Series', color: '#09BEC4' }
+    { id: 'street_fighter', name: 'Street Fighter Series', color: '#09BEC4' },
+    { id: 'pragmata', name: 'Pragmata Series', color: '#003AA5' }
 ];
 
 const amiibo = [
@@ -351,5 +352,8 @@ const amiibo = [
     // Street Fighter Series
     { id: 'street_fighter_01', name: 'Luke', series: 'street_fighter' },
     { id: 'street_fighter_02', name: 'Jamie', series: 'street_fighter' },
-    { id: 'street_fighter_03', name: 'Kimberly', series: 'street_fighter' }
+    { id: 'street_fighter_03', name: 'Kimberly', series: 'street_fighter' },
+
+    // Pragmata Series
+    { id: 'pragmata_01', name: 'Diana', series: 'pragmata' }
 ];

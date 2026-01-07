@@ -4,21 +4,14 @@ let amiiboStatesCards = {};
 let scrollPositions = { figures: 0, cards: 0 };
 let collapsedSeries = { figures: {}, cards: {} };
 let darkMode = false;
+let filters = {
+    name: '',
+    series: '',
+    state: '',
+};
 
 function initStates() {
-    const savedFigures = localStorage.getItem('amiiboStatesFigures');
-    const savedCards = localStorage.getItem('amiiboStatesCards');
-    const savedCollapsed = localStorage.getItem('collapsedSeries');
-    const savedDarkMode = localStorage.getItem('darkMode');
-
-    if (savedFigures) amiiboStatesFigures = JSON.parse(savedFigures);
-    if (savedCards) amiiboStatesCards = JSON.parse(savedCards);
-    if (savedCollapsed) collapsedSeries = JSON.parse(savedCollapsed);
-    if (savedDarkMode !== null) {
-        darkMode = JSON.parse(savedDarkMode);
-    } else {
-        darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
+    darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     [amiibo, amiiboCards].forEach((list, idx) => {
         const statesObj = idx === 0 ? amiiboStatesFigures : amiiboStatesCards;
@@ -26,9 +19,6 @@ function initStates() {
             if (statesObj[amiibo.id] === undefined) statesObj[amiibo.id] = 0;
         });
     });
-
-    localStorage.setItem('amiiboStatesFigures', JSON.stringify(amiiboStatesFigures));
-    localStorage.setItem('amiiboStatesCards', JSON.stringify(amiiboStatesCards));
 
     applyDarkMode();
 }
@@ -71,7 +61,6 @@ function applyDarkMode() {
 
 function toggleDarkMode() {
     darkMode = !darkMode;
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
     applyDarkMode();
 }
 
@@ -138,8 +127,6 @@ function cycleState(amiiboId) {
     if (card) card.className = `amiibo-card state-${data.states[amiiboId]}`;
 
     updateCounters();
-    localStorage.setItem('amiiboStatesFigures', JSON.stringify(amiiboStatesFigures));
-    localStorage.setItem('amiiboStatesCards', JSON.stringify(amiiboStatesCards));
 }
 
 function markAllInSeries(seriesId, state) {
@@ -147,20 +134,19 @@ function markAllInSeries(seriesId, state) {
     const amiiboSeries = data.amiibo.filter(a => a.series === seriesId);
 
     amiiboSeries.forEach(amiibo => {
-        data.states[amiibo.id] = state;
-        const card = document.querySelector(`[data-amiibo-id="${amiibo.id}"]`);
-        if (card) card.className = `amiibo-card state-${state}`;
+        if (matchesFilters(amiibo)) {
+            data.states[amiibo.id] = state;
+            const card = document.querySelector(`[data-amiibo-id="${amiibo.id}"]`);
+            if (card) card.className = `amiibo-card state-${state}`;
+        }
     });
 
     updateCounters();
-    localStorage.setItem('amiiboStatesFigures', JSON.stringify(amiiboStatesFigures));
-    localStorage.setItem('amiiboStatesCards', JSON.stringify(amiiboStatesCards));
 }
 
 function toggleSeriesCollapse(seriesId) {
     const currentCollapsed = collapsedSeries[currentView];
     currentCollapsed[seriesId] = !currentCollapsed[seriesId];
-    localStorage.setItem('collapsedSeries', JSON.stringify(collapsedSeries));
 
     const cards = document.querySelectorAll(`[data-series-id="${seriesId}"]`);
     const arrow = document.querySelector(`[data-arrow-series="${seriesId}"]`);
@@ -173,46 +159,28 @@ function toggleSeriesCollapse(seriesId) {
     if (buttonsContainer) buttonsContainer.style.display = currentCollapsed[seriesId] ? 'none' : 'flex';
 }
 
-function collapseAll() {
+function matchesFilters(amiibo) {
     const data = getCurrentData();
-    const currentCollapsed = collapsedSeries[currentView];
 
-    data.series.forEach(seriesData => {
-        currentCollapsed[seriesData.id] = true;
+    if (filters.name && !amiibo.name.toLowerCase().includes(filters.name.toLowerCase())) {
+        return false;
+    }
 
-        const cards = document.querySelectorAll(`[data-series-id="${seriesData.id}"]`);
-        const arrow = document.querySelector(`[data-arrow-series="${seriesData.id}"]`);
-        const header = arrow?.closest('.series-header-full');
-        const buttonsContainer = header?.querySelector('.series-buttons');
+    if (filters.series && amiibo.series !== filters.series) {
+        return false;
+    }
 
-        cards.forEach(card => card.style.display = 'none');
-        if (arrow) arrow.classList.add('collapsed');
-        if (header) header.classList.add('collapsed');
-        if (buttonsContainer) buttonsContainer.style.display = 'none';
-    });
+    if (filters.state !== '' && data.states[amiibo.id] !== parseInt(filters.state)) {
+        return false;
+    }
 
-    localStorage.setItem('collapsedSeries', JSON.stringify(collapsedSeries));
+    return true;
 }
 
-function expandAll() {
+function seriesHasVisibleItems(seriesId) {
     const data = getCurrentData();
-    const currentCollapsed = collapsedSeries[currentView];
-
-    data.series.forEach(seriesData => {
-        currentCollapsed[seriesData.id] = false;
-
-        const cards = document.querySelectorAll(`[data-series-id="${seriesData.id}"]`);
-        const arrow = document.querySelector(`[data-arrow-series="${seriesData.id}"]`);
-        const header = arrow?.closest('.series-header-full');
-        const buttonsContainer = header?.querySelector('.series-buttons');
-
-        cards.forEach(card => card.style.display = 'block');
-        if (arrow) arrow.classList.remove('collapsed');
-        if (header) header.classList.remove('collapsed');
-        if (buttonsContainer) buttonsContainer.style.display = 'flex';
-    });
-
-    localStorage.setItem('collapsedSeries', JSON.stringify(collapsedSeries));
+    const seriesItems = data.amiibo.filter(a => a.series === seriesId);
+    return seriesItems.some(a => matchesFilters(a));
 }
 
 function createAmiiboCard(amiibo) {
@@ -253,6 +221,7 @@ function createAmiiboCard(amiibo) {
 function createSeriesHeader(seriesData) {
     const header = document.createElement('div');
     header.className = 'series-header-full';
+    header.setAttribute('data-series-header', seriesData.id);
 
     const { unboxed, sealed, total } = getCounts(seriesData.id);
     const { allCollected, allSealed } = getSeriesCompletion(seriesData.id);
@@ -326,33 +295,87 @@ function createSeriesHeader(seriesData) {
 function renderAmiibo() {
     const data = getCurrentData();
     const grid = document.getElementById('amiiboGrid');
-    grid.innerHTML = '';
+    const fragment = document.createDocumentFragment();
 
     data.series.forEach((seriesData, index) => {
         const amiiboSeries = data.amiibo.filter(a => a.series === seriesData.id);
-        if (amiiboSeries.length > 0) {
-            grid.appendChild(createSeriesHeader(seriesData));
+
+        if (amiiboSeries.length > 0 && seriesHasVisibleItems(seriesData.id)) {
+            fragment.appendChild(createSeriesHeader(seriesData));
 
             const isCollapsed = collapsedSeries[currentView][seriesData.id];
 
             amiiboSeries.forEach(amiibo => {
-                const card = createAmiiboCard(amiibo);
-                if (isCollapsed) card.style.display = 'none';
-                grid.appendChild(card);
+                if (matchesFilters(amiibo)) {
+                    const card = createAmiiboCard(amiibo);
+                    if (isCollapsed) card.style.display = 'none';
+                    fragment.appendChild(card);
+                }
             });
 
             if (index < data.series.length - 1) {
                 const spacer = document.createElement('div');
                 spacer.className = 'series-spacer';
-                grid.appendChild(spacer);
+                fragment.appendChild(spacer);
             }
         }
     });
 
+    grid.innerHTML = '';
+    grid.appendChild(fragment);
+
     updateCounters();
 }
 
+function populateSeriesFilter() {
+    const seriesFilter = document.getElementById('seriesFilter');
+    const data = getCurrentData();
+
+    seriesFilter.innerHTML = '<option value="">All Series</option>';
+
+    const sortedSeries = [...data.series].sort((a, b) => a.name.localeCompare(b.name));
+
+    sortedSeries.forEach(seriesData => {
+        const option = document.createElement('option');
+        option.value = seriesData.id;
+        option.textContent = seriesData.name;
+        option.setAttribute('data-color', seriesData.color);
+        seriesFilter.appendChild(option);
+    });
+}
+
+function updateSeriesFilterColor() {
+    const seriesFilter = document.getElementById('seriesFilter');
+    const data = getCurrentData();
+
+    if (seriesFilter.value) {
+        const selectedSeries = data.series.find(s => s.id === seriesFilter.value);
+        if (selectedSeries) {
+            seriesFilter.style.color = selectedSeries.color;
+            seriesFilter.classList.add('has-series-selection');
+        }
+    } else {
+        seriesFilter.style.color = '';
+        seriesFilter.classList.remove('has-series-selection');
+    }
+}
+
+function updateStateFilterColor() {
+    const stateFilter = document.getElementById('stateFilter');
+
+    if (stateFilter.value !== '') {
+        stateFilter.classList.add('has-state-selection');
+        stateFilter.setAttribute('data-state', stateFilter.value);
+    } else {
+        stateFilter.classList.remove('has-state-selection');
+        stateFilter.removeAttribute('data-state');
+        stateFilter.style.color = '';
+    }
+}
+
 function switchView(view) {
+    if (currentView === view) return;
+
     scrollPositions[currentView] = window.scrollY;
     sessionStorage.setItem('scrollPositions', JSON.stringify(scrollPositions));
 
@@ -363,8 +386,13 @@ function switchView(view) {
         btn.classList.toggle('active', btn.dataset.view === view);
     });
 
-    renderAmiibo();
-    setTimeout(() => window.scrollTo(0, scrollPositions[view]), 0);
+    populateSeriesFilter();
+    requestAnimationFrame(() => {
+        renderAmiibo();
+        requestAnimationFrame(() => {
+            window.scrollTo(0, scrollPositions[view]);
+        });
+    });
 }
 
 document.querySelectorAll('.view-btn').forEach(btn => {
@@ -373,6 +401,34 @@ document.querySelectorAll('.view-btn').forEach(btn => {
     });
 });
 
+document.getElementById('nameSearch')?.addEventListener('input', (e) => {
+    filters.name = e.target.value;
+    renderAmiibo();
+});
+
+document.getElementById('seriesFilter')?.addEventListener('change', (e) => {
+    filters.series = e.target.value;
+    updateSeriesFilterColor();
+    renderAmiibo();
+});
+
+document.getElementById('stateFilter')?.addEventListener('change', (e) => {
+    filters.state = e.target.value;
+    updateStateFilterColor();
+    renderAmiibo();
+});
+
+document.getElementById('resetFiltersBtn')?.addEventListener('click', () => {
+    filters = { name: '', series: '', state: '' };
+    document.getElementById('nameSearch').value = '';
+    document.getElementById('seriesFilter').value = '';
+    document.getElementById('stateFilter').value = '';
+    updateSeriesFilterColor();
+    updateStateFilterColor();
+    renderAmiibo();
+});
+
+populateSeriesFilter();
 renderAmiibo();
 
 document.querySelectorAll('.view-btn').forEach(btn => {
@@ -399,20 +455,22 @@ function toggleScrollButton() {
 }
 
 scrollToTopBtn.addEventListener('click', () => {
+    scrollToTopBtn.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => scrollToTopBtn.classList.remove('active'), 300);
 });
 
 scrollToTopBtn.addEventListener('touchend', (e) => {
     e.preventDefault();
+    scrollToTopBtn.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => scrollToTopBtn.classList.remove('active'), 300);
     scrollToTopBtn.blur();
 });
 
 window.addEventListener('scroll', toggleScrollButton);
 toggleScrollButton();
 
-document.getElementById('collapseAllBtn')?.addEventListener('click', collapseAll);
-document.getElementById('expandAllBtn')?.addEventListener('click', expandAll);
 document.getElementById('themeToggle')?.addEventListener('click', toggleDarkMode);
 
 function exportData() {
@@ -428,7 +486,7 @@ function exportData() {
     });
 
     const exportObj = {
-        version: '1.4',
+        version: '1.5',
         exportDate: new Date().toISOString(),
         figures: figuresData,
         cards: cardsData
@@ -467,14 +525,18 @@ function importData(jsonString) {
 
         amiiboStatesFigures = newFiguresStates;
         amiiboStatesCards = newCardsStates;
-        localStorage.setItem('amiiboStatesFigures', JSON.stringify(amiiboStatesFigures));
-        localStorage.setItem('amiiboStatesCards', JSON.stringify(amiiboStatesCards));
         renderAmiibo();
 
         return { success: true, message: 'Data imported successfully!' };
     } catch (error) {
         return { success: false, message: `Import failed: ${error.message}` };
     }
+}
+
+function resetAllData() {
+    amiibo.forEach(a => amiiboStatesFigures[a.id] = 0);
+    amiiboCards.forEach(a => amiiboStatesCards[a.id] = 0);
+    renderAmiibo();
 }
 
 function openModal(modalId) {
@@ -490,7 +552,12 @@ function showMessage(title, message, isSuccess = true, actions = []) {
 
     const messageText = document.getElementById('messageText');
     messageText.textContent = message;
-    messageText.className = isSuccess ? 'success-message' : 'error-message';
+
+    if (isSuccess === 'warning') {
+        messageText.className = 'warning-message';
+    } else {
+        messageText.className = isSuccess ? 'success-message' : 'error-message';
+    }
 
     const actionsContainer = document.getElementById('messageActions');
     actionsContainer.innerHTML = '';
@@ -560,6 +627,39 @@ document.getElementById('importFile').addEventListener('change', (e) => {
     };
     reader.readAsText(file);
     e.target.value = '';
+});
+
+document.getElementById('deleteBtn')?.addEventListener('click', () => {
+    showMessage(
+        'Delete All Data',
+        'Are you sure you want to delete all your collection data? This action cannot be undone!',
+        'warning',
+        [
+            {
+                text: 'Cancel',
+                class: 'collapse-btn',
+                onClick: () => closeModal('messageModal')
+            },
+            {
+                text: 'Delete All Data',
+                class: 'delete-btn',
+                onClick: () => {
+                    resetAllData();
+                    closeModal('messageModal');
+                    showMessage(
+                        'Data Deleted',
+                        'All collection data has been deleted successfully.',
+                        true,
+                        [{
+                            text: 'OK',
+                            class: 'copy-btn',
+                            onClick: () => closeModal('messageModal')
+                        }]
+                    );
+                }
+            }
+        ]
+    );
 });
 
 document.querySelectorAll('.close-modal').forEach(closeBtn => {

@@ -21,6 +21,12 @@ It is intended purely for personal use.
 
 ## Version History
 
+### v1.5 - 2026-01-07
+- Added a search/filter functionality.
+- Added a "Delete Data" button.
+- Added 1 new **Pragmata** Series amiibo.
+- Removed the "Collapse All" and "Expand All" buttons.
+
 ### v1.4 - 2025-11-10
 - Added dark mode.
 - Added "Collapse All" and "Expand All" buttons.

@@ -19,7 +19,14 @@ It is intended purely for personal use.
 5. Your progress is saved automatically in your browser.
 6. **Tip:** Bookmark the page or create a desktop shortcut for easy access.
 
+**OR:**
+
+1. Just open this link in a new tab and enjoy: https://58potato.github.io/amiibo-checklist/
+
 ## Version History
+
+#### v1.5.1 - 2026-01-07
+- Added missing dark mode images.
 
 ### v1.5 - 2026-01-07
 - Added a search/filter functionality.

@@ -21,7 +21,7 @@ It is intended purely for personal use.
 
 **OR:**
 
-1. Just open this link in a new tab and enjoy: https://58potato.github.io/amiibo-checklist/
+1. Just open this link in a new tab and enjoy: https://58potato.github.io/amiibo-checklist/ 
 
 ## Version History
 

@@ -35,18 +35,10 @@ function loadFromLocalStorage() {
         const savedDarkMode = localStorage.getItem(STORAGE_KEYS.DARK_MODE);
         const savedCollapsedSeries = localStorage.getItem(STORAGE_KEYS.COLLAPSED_SERIES);
 
-        if (savedFigures) {
-            amiiboStatesFigures = JSON.parse(savedFigures);
-        }
-        if (savedCards) {
-            amiiboStatesCards = JSON.parse(savedCards);
-        }
-        if (savedDarkMode !== null) {
-            darkMode = JSON.parse(savedDarkMode);
-        }
-        if (savedCollapsedSeries) {
-            collapsedSeries = JSON.parse(savedCollapsedSeries);
-        }
+        if (savedFigures) amiiboStatesFigures = JSON.parse(savedFigures);
+        if (savedCards) amiiboStatesCards = JSON.parse(savedCards);
+        if (savedDarkMode !== null) darkMode = JSON.parse(savedDarkMode);
+        if (savedCollapsedSeries) collapsedSeries = JSON.parse(savedCollapsedSeries);
     } catch (e) {
         console.error('Error loading from localStorage:', e);
     }
@@ -61,8 +53,8 @@ function initStates() {
 
     [amiibo, amiiboCards].forEach((list, idx) => {
         const statesObj = idx === 0 ? amiiboStatesFigures : amiiboStatesCards;
-        list.forEach(amiibo => {
-            if (statesObj[amiibo.id] === undefined) statesObj[amiibo.id] = 0;
+        list.forEach(amiiboItem => {
+            if (statesObj[amiiboItem.id] === undefined) statesObj[amiiboItem.id] = 0;
         });
     });
 
@@ -80,10 +72,8 @@ function applyDarkMode() {
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.setAttribute('data-theme', darkMode ? 'dark' : 'light');
-
         const lightOption = themeToggle.querySelector('[data-theme="light"]');
         const darkOption = themeToggle.querySelector('[data-theme="dark"]');
-
         if (lightOption && darkOption) {
             if (darkMode) {
                 lightOption.classList.remove('active');
@@ -96,14 +86,10 @@ function applyDarkMode() {
     }
 
     const logo = document.querySelector('.amiibo-logo');
-    if (logo) {
-        logo.src = darkMode ? 'images/logo_dark.png' : 'images/logo.png';
-    }
+    if (logo) logo.src = darkMode ? 'images/logo_dark.png' : 'images/logo.png';
 
     const scrollArrow = document.querySelector('#scrollToTopBtn img');
-    if (scrollArrow) {
-        scrollArrow.src = darkMode ? 'images/arrow_up_dark.png' : 'images/arrow_up.png';
-    }
+    if (scrollArrow) scrollArrow.src = darkMode ? 'images/arrow_up_dark.png' : 'images/arrow_up.png';
 }
 
 function toggleDarkMode() {
@@ -122,7 +108,7 @@ if (savedScrollPos) scrollPositions = JSON.parse(savedScrollPos);
 
 function getCurrentData() {
     return currentView === 'figures'
-        ? { series, amiibo, states: amiiboStatesFigures }
+        ? { series: series, amiibo: amiibo, states: amiiboStatesFigures }
         : { series: cardSeries, amiibo: amiiboCards, states: amiiboStatesCards };
 }
 
@@ -172,7 +158,17 @@ function cycleState(amiiboId) {
     data.states[amiiboId] = (data.states[amiiboId] + 1) % 3;
 
     const card = document.querySelector(`[data-amiibo-id="${amiiboId}"]`);
-    if (card) card.className = `amiibo-card state-${data.states[amiiboId]}`;
+    if (card) {
+        card.className = `amiibo-card state-${data.states[amiiboId]}`;
+        const img = card.querySelector('.image-container img');
+        if (img) {
+            if (data.states[amiiboId] === 0) {
+                img.classList.add('greyscale');
+            } else {
+                img.classList.remove('greyscale');
+            }
+        }
+    }
 
     updateCounters();
     saveToLocalStorage();
@@ -182,15 +178,65 @@ function markAllInSeries(seriesId, state) {
     const data = getCurrentData();
     const amiiboSeries = data.amiibo.filter(a => a.series === seriesId);
 
-    amiiboSeries.forEach(amiibo => {
-        if (matchesFilters(amiibo)) {
-            data.states[amiibo.id] = state;
-            const card = document.querySelector(`[data-amiibo-id="${amiibo.id}"]`);
-            if (card) card.className = `amiibo-card state-${state}`;
+    amiiboSeries.forEach(amiiboItem => {
+        if (matchesFilters(amiiboItem)) {
+            data.states[amiiboItem.id] = state;
+            const card = document.querySelector(`[data-amiibo-id="${amiiboItem.id}"]`);
+            if (card) {
+                card.className = `amiibo-card state-${state}`;
+                const img = card.querySelector('.image-container img');
+                if (img) {
+                    if (state === 0) img.classList.add('greyscale');
+                    else img.classList.remove('greyscale');
+                }
+            }
         }
     });
 
     updateCounters();
+    saveToLocalStorage();
+}
+
+function getVisibleSeriesIds() {
+    const data = getCurrentData();
+    return data.series.filter(s => {
+        const amiiboSeries = data.amiibo.filter(a => a.series === s.id);
+        return amiiboSeries.length > 0 && seriesHasVisibleItems(s.id);
+    }).map(s => s.id);
+}
+
+function updateCollapseAllArrow() {
+    const collapseAllBtn = document.getElementById('collapseAllBtn');
+    if (!collapseAllBtn) return;
+
+    const visibleSeriesIds = getVisibleSeriesIds();
+    const allCollapsed = visibleSeriesIds.length > 0 && visibleSeriesIds.every(id => collapsedSeries[currentView][id]);
+
+    collapseAllBtn.classList.toggle('collapsed', allCollapsed);
+}
+
+function toggleCollapseAll() {
+    const currentCollapsed = collapsedSeries[currentView];
+    const visibleSeriesIds = getVisibleSeriesIds();
+
+    const allCollapsed = visibleSeriesIds.every(id => currentCollapsed[id]);
+    const shouldCollapse = !allCollapsed;
+
+    visibleSeriesIds.forEach(seriesId => {
+        currentCollapsed[seriesId] = shouldCollapse;
+
+        const cards = document.querySelectorAll(`[data-series-id="${seriesId}"]`);
+        const arrow = document.querySelector(`[data-arrow-series="${seriesId}"]`);
+        const header = arrow?.closest('.series-header-full');
+        const buttonsContainer = header?.querySelector('.series-buttons');
+
+        cards.forEach(card => card.style.display = shouldCollapse ? 'none' : 'block');
+        if (arrow) arrow.classList.toggle('collapsed', shouldCollapse);
+        if (header) header.classList.toggle('collapsed', shouldCollapse);
+        if (buttonsContainer) buttonsContainer.style.display = shouldCollapse ? 'none' : 'flex';
+    });
+
+    updateCollapseAllArrow();
     saveToLocalStorage();
 }
 
@@ -208,23 +254,16 @@ function toggleSeriesCollapse(seriesId) {
     if (header) header.classList.toggle('collapsed', currentCollapsed[seriesId]);
     if (buttonsContainer) buttonsContainer.style.display = currentCollapsed[seriesId] ? 'none' : 'flex';
 
+    updateCollapseAllArrow();
     saveToLocalStorage();
 }
 
-function matchesFilters(amiibo) {
+function matchesFilters(amiiboItem) {
     const data = getCurrentData();
 
-    if (filters.name && !amiibo.name.toLowerCase().includes(filters.name.toLowerCase())) {
-        return false;
-    }
-
-    if (filters.series && amiibo.series !== filters.series) {
-        return false;
-    }
-
-    if (filters.state !== '' && data.states[amiibo.id] !== parseInt(filters.state)) {
-        return false;
-    }
+    if (filters.name && !amiiboItem.name.toLowerCase().includes(filters.name.toLowerCase())) return false;
+    if (filters.series && amiiboItem.series !== filters.series) return false;
+    if (filters.state !== '' && data.states[amiiboItem.id] !== parseInt(filters.state)) return false;
 
     return true;
 }
@@ -235,24 +274,24 @@ function seriesHasVisibleItems(seriesId) {
     return seriesItems.some(a => matchesFilters(a));
 }
 
-function createAmiiboCard(amiibo) {
-    const state = getCurrentData().states[amiibo.id];
+function createAmiiboCard(amiiboItem) {
+    const state = getCurrentData().states[amiiboItem.id];
     const imagePath = currentView === 'figures' ? 'figures' : 'cards';
 
     const card = document.createElement('div');
     card.className = `amiibo-card state-${state}`;
-    card.setAttribute('data-amiibo-id', amiibo.id);
-    card.setAttribute('data-series-id', amiibo.series);
+    card.setAttribute('data-amiibo-id', amiiboItem.id);
+    card.setAttribute('data-series-id', amiiboItem.series);
 
     card.innerHTML = `
         <div class="image-container">
-            <img src="images/${imagePath}/${amiibo.series}/${amiibo.id}.png" 
-                 alt="${amiibo.name}">
+            <img src="images/${imagePath}/${amiiboItem.series}/${amiiboItem.id}.png"
+                 alt="${amiiboItem.name}" class="${state === 0 ? 'greyscale' : ''}">
             <div class="placeholder-image" style="display: none;">
-                ${amiibo.name}
+                ${amiiboItem.name}
             </div>
         </div>
-        <div class="amiibo-name">${amiibo.name}</div>
+        <div class="amiibo-name">${amiiboItem.name}</div>
     `;
 
     const img = card.querySelector('img');
@@ -264,13 +303,13 @@ function createAmiiboCard(amiibo) {
 
     card.addEventListener('click', (e) => {
         e.preventDefault();
-        cycleState(amiibo.id);
+        cycleState(amiiboItem.id);
     });
 
     return card;
 }
 
-function createSeriesHeader(seriesData) {
+function createSeriesHeader(seriesData, isFirstVisible) {
     const header = document.createElement('div');
     header.className = 'series-header-full';
     header.setAttribute('data-series-header', seriesData.id);
@@ -282,6 +321,24 @@ function createSeriesHeader(seriesData) {
     const headerContent = document.createElement('div');
     headerContent.className = 'series-header-content';
 
+    if (isFirstVisible) {
+        const collapseAllBtn = document.createElement('span');
+        collapseAllBtn.className = 'collapse-arrow collapse-all-arrow';
+        collapseAllBtn.id = 'collapseAllBtn';
+        collapseAllBtn.title = 'Collapse / expand all series';
+
+        const visibleSeriesIds = getVisibleSeriesIds();
+        const allCollapsedNow = visibleSeriesIds.length > 0 && visibleSeriesIds.every(id => collapsedSeries[currentView][id]);
+        if (allCollapsedNow) collapseAllBtn.classList.add('collapsed');
+
+        collapseAllBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleCollapseAll();
+        });
+
+        headerContent.appendChild(collapseAllBtn);
+    }
+
     const collapseArrow = document.createElement('span');
     collapseArrow.className = 'collapse-arrow';
     collapseArrow.style.borderLeftColor = seriesData.color;
@@ -292,6 +349,11 @@ function createSeriesHeader(seriesData) {
         collapseArrow.classList.add('collapsed');
         header.classList.add('collapsed');
     }
+
+    collapseArrow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleSeriesCollapse(seriesData.id);
+    });
 
     const titleText = document.createElement('span');
     titleText.className = 'series-title';
@@ -317,14 +379,14 @@ function createSeriesHeader(seriesData) {
     if (isCollapsed) buttonsContainer.style.display = 'none';
 
     const buttons = [
-        { class: 'btn-not-owned', text: 'Mark all as Not Owned', state: 0 },
-        { class: 'btn-unboxed', text: 'Mark all as Unboxed', state: 1 },
-        { class: 'btn-sealed', text: 'Mark all as Sealed', state: 2 }
+        { buttonClass: 'btn-not-owned', text: 'Mark all as Not Owned', state: 0 },
+        { buttonClass: 'btn-unboxed', text: 'Mark all as Unboxed', state: 1 },
+        { buttonClass: 'btn-sealed', text: 'Mark all as Sealed', state: 2 }
     ];
 
     buttons.forEach(btnConfig => {
         const btn = document.createElement('button');
-        btn.className = `series-btn ${btnConfig.class}`;
+        btn.className = `series-btn ${btnConfig.buttonClass}`;
         btn.textContent = btnConfig.text;
         btn.onclick = (e) => {
             e.stopPropagation();
@@ -337,7 +399,9 @@ function createSeriesHeader(seriesData) {
     title.appendChild(buttonsContainer);
     title.style.cursor = 'pointer';
     title.addEventListener('click', (e) => {
-        if (!e.target.closest('.series-buttons')) toggleSeriesCollapse(seriesData.id);
+        if (!e.target.closest('.series-buttons') && !e.target.closest('.collapse-arrow')) {
+            toggleSeriesCollapse(seriesData.id);
+        }
     });
 
     header.appendChild(title);
@@ -349,17 +413,20 @@ function renderAmiibo() {
     const grid = document.getElementById('amiiboGrid');
     const fragment = document.createDocumentFragment();
 
+    let firstVisibleSeries = true;
+
     data.series.forEach((seriesData, index) => {
         const amiiboSeries = data.amiibo.filter(a => a.series === seriesData.id);
 
         if (amiiboSeries.length > 0 && seriesHasVisibleItems(seriesData.id)) {
-            fragment.appendChild(createSeriesHeader(seriesData));
+            fragment.appendChild(createSeriesHeader(seriesData, firstVisibleSeries));
+            firstVisibleSeries = false;
 
             const isCollapsed = collapsedSeries[currentView][seriesData.id];
 
-            amiiboSeries.forEach(amiibo => {
-                if (matchesFilters(amiibo)) {
-                    const card = createAmiiboCard(amiibo);
+            amiiboSeries.forEach(amiiboItem => {
+                if (matchesFilters(amiiboItem)) {
+                    const card = createAmiiboCard(amiiboItem);
                     if (isCollapsed) card.style.display = 'none';
                     fragment.appendChild(card);
                 }
@@ -425,6 +492,15 @@ function updateStateFilterColor() {
     }
 }
 
+function resetFilters() {
+    filters = { name: '', series: '', state: '' };
+    document.getElementById('nameSearch').value = '';
+    document.getElementById('seriesFilter').value = '';
+    document.getElementById('stateFilter').value = '';
+    updateSeriesFilterColor();
+    updateStateFilterColor();
+}
+
 function switchView(view) {
     if (currentView === view) return;
 
@@ -438,6 +514,7 @@ function switchView(view) {
         btn.classList.toggle('active', btn.dataset.view === view);
     });
 
+    resetFilters();
     populateSeriesFilter();
     requestAnimationFrame(() => {
         renderAmiibo();
@@ -471,15 +548,11 @@ document.getElementById('stateFilter')?.addEventListener('change', (e) => {
 });
 
 document.getElementById('resetFiltersBtn')?.addEventListener('click', () => {
-    filters = { name: '', series: '', state: '' };
-    document.getElementById('nameSearch').value = '';
-    document.getElementById('seriesFilter').value = '';
-    document.getElementById('stateFilter').value = '';
-    updateSeriesFilterColor();
-    updateStateFilterColor();
+    resetFilters();
     renderAmiibo();
 });
 
+resetFilters();
 populateSeriesFilter();
 renderAmiibo();
 
@@ -601,13 +674,13 @@ function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('show');
 }
 
-function showMessage(title, message, isSuccess = true, actions = []) {
+function showMessage(title, message, isSuccess, actions = []) {
     document.getElementById('messageTitle').textContent = title;
 
     const messageText = document.getElementById('messageText');
     messageText.textContent = message;
 
-    if (isSuccess === 'warning') {
+    if (typeof isSuccess === 'string' && isSuccess === 'warning') {
         messageText.className = 'warning-message';
     } else {
         messageText.className = isSuccess ? 'success-message' : 'error-message';
@@ -618,9 +691,9 @@ function showMessage(title, message, isSuccess = true, actions = []) {
 
     actions.forEach(action => {
         const btn = document.createElement('button');
-        btn.className = `control-btn ${action.class || ''}`;
+        btn.className = `control-btn ${action.buttonClass || ''}`;
         btn.textContent = action.text;
-        btn.onclick = action.onClick;
+        btn.onclick = action.handler;
         actionsContainer.appendChild(btn);
     });
 
@@ -632,15 +705,26 @@ document.getElementById('exportBtn').addEventListener('click', () => {
     openModal('exportModal');
 });
 
-document.getElementById('copyBtn').addEventListener('click', () => {
+document.getElementById('copyBtn').addEventListener('click', async () => {
     const textarea = document.getElementById('exportData');
-    textarea.select();
-    document.execCommand('copy');
-
-    const btn = document.getElementById('copyBtn');
-    const originalText = btn.textContent;
-    btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = originalText, 2000);
+    try {
+        await navigator.clipboard.writeText(textarea.value);
+        const btn = document.getElementById('copyBtn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = originalText, 2000);
+    } catch (err) {
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            const btn = document.getElementById('copyBtn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = originalText, 2000);
+        } catch (e) {
+            console.error('Copy failed:', e);
+        }
+    }
 });
 
 document.getElementById('downloadBtn').addEventListener('click', () => {
@@ -674,8 +758,8 @@ document.getElementById('importFile').addEventListener('change', (e) => {
             result.success,
             [{
                 text: 'OK',
-                class: result.success ? 'copy-btn' : 'export-btn',
-                onClick: () => closeModal('messageModal')
+                buttonClass: result.success ? 'copy-btn' : 'export-btn',
+                handler: () => closeModal('messageModal')
             }]
         );
     };
@@ -691,13 +775,13 @@ document.getElementById('deleteBtn')?.addEventListener('click', () => {
         [
             {
                 text: 'Cancel',
-                class: 'collapse-btn',
-                onClick: () => closeModal('messageModal')
+                buttonClass: 'collapse-btn',
+                handler: () => closeModal('messageModal')
             },
             {
                 text: 'Delete All Data',
-                class: 'delete-btn',
-                onClick: () => {
+                buttonClass: 'delete-btn',
+                handler: () => {
                     resetAllData();
                     closeModal('messageModal');
                     showMessage(
@@ -706,8 +790,8 @@ document.getElementById('deleteBtn')?.addEventListener('click', () => {
                         true,
                         [{
                             text: 'OK',
-                            class: 'copy-btn',
-                            onClick: () => closeModal('messageModal')
+                            buttonClass: 'copy-btn',
+                            handler: () => closeModal('messageModal')
                         }]
                     );
                 }

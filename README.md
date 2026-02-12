@@ -25,6 +25,12 @@ It is intended purely for personal use.
 
 ## Version History
 
+### v1.6 - 2026-02-12
+- Re-added the "Collapse All" and "Expand All" functionality in the form of an arrow button.
+- Not owned amiibo now display in greyscale for easier tracking.
+- Added 3 new **Super Mario Bros. Wonder** amiibo.
+- Added 2 new **Resident Evil Requiem** amiibo.
+
 #### v1.5.2 - 2026-01-07
 - Fixed an issue with the checklist not saving progress.
 
@@ -34,7 +40,7 @@ It is intended purely for personal use.
 ### v1.5 - 2026-01-07
 - Added a search/filter functionality.
 - Added a "Delete Data" button.
-- Added 1 new **Pragmata** Series amiibo.
+- Added 1 new **Pragmata** amiibo.
 - Removed the "Collapse All" and "Expand All" buttons.
 
 ### v1.4 - 2025-11-10
@@ -43,14 +49,13 @@ It is intended purely for personal use.
 
 ### v1.3 - 2025-11-08
 - Added collapsible series titles for better navigation.
-- Fixed: Logo now stays in bounds when zoomed in.
 
 ### v1.2 - 2025-11-06
 - Added data export/import functions.
-- Added a “Back to Top” button for quick navigation.
+- Added a “Back to Top” button for quicker navigation.
 
 #### v1.1.1 - 2025-11-05
-- Added the 3 new **Monster Hunter Stories 3** Series amiibo.
+- Added 3 new **Monster Hunter Stories 3** amiibo.
 
 ### v1.1 - 2025-11-05
 - Added amiibo cards to the checklist.

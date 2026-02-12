@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>amiibo Checklist</title>
     <link rel="icon" type="image/png" href="images/favicon.png">
-    <link rel="stylesheet" href="styles.css?v=1.5">
+    <link rel="stylesheet" href="styles.css?v=1.6">
 </head>
 <body>
 <div class="container">
@@ -38,10 +38,13 @@
 
         <div class="filter-section">
             <div class="filter-row">
+                <label for="nameSearch" class="visually-hidden">Search by name</label>
                 <input type="text" id="nameSearch" class="filter-input" placeholder="Search by name...">
+                <label for="seriesFilter" class="visually-hidden">Filter by series</label>
                 <select id="seriesFilter" class="filter-select">
                     <option value="">All Series</option>
                 </select>
+                <label for="stateFilter" class="visually-hidden">Filter by state</label>
                 <select id="stateFilter" class="filter-select">
                     <option value="">All States</option>
                     <option value="0">Not Owned</option>
@@ -114,8 +117,8 @@
     </div>
 </div>
 
-<script src="amiibo-data.js?v=1.5"></script>
-<script src="amiibo-cards-data.js?v=1.5"></script>
-<script src="script.js?v=1.5"></script>
+<script src="amiibo-data.js?v=1.6"></script>
+<script src="amiibo-cards-data.js?v=1.6"></script>
+<script src="script.js?v=1.6"></script>
 </body>
 </html>

@@ -25,6 +25,7 @@ const series = [
     { id: 'diablo', name: 'Diablo Series', color: '#B8381B' },
     { id: 'mega_man', name: 'Mega Man Series', color: '#81A893' },
     { id: 'street_fighter', name: 'Street Fighter Series', color: '#09BEC4' },
+    { id: 'resident_evil', name: 'Resident Evil Series', color: '#52372C' },
     { id: 'pragmata', name: 'Pragmata Series', color: '#003AA5' }
 ];
 
@@ -152,6 +153,9 @@ const amiibo = [
     { id: 'mario_23', name: 'Cat Peach', series: 'mario' },
     { id: 'mario_24', name: 'Mario and Luma', series: 'mario' },
     { id: 'mario_25', name: 'Rosalina and Lumas', series: 'mario' },
+    { id: 'mario_26', name: 'Elephant Mario', series: 'mario' },
+    { id: 'mario_27', name: 'Poplin & Prince Florian', series: 'mario' },
+    { id: 'mario_28', name: 'Captain Toad & Talking Flower', series: 'mario' },
 
     // Super Mario 30th Anniversary Series
     { id: 'mario_30_01', name: '30th Anniversary Mario - Classic Colours', series: 'mario_30' },
@@ -353,6 +357,10 @@ const amiibo = [
     { id: 'street_fighter_01', name: 'Luke', series: 'street_fighter' },
     { id: 'street_fighter_02', name: 'Jamie', series: 'street_fighter' },
     { id: 'street_fighter_03', name: 'Kimberly', series: 'street_fighter' },
+
+    // Resident Evil Series
+    { id: 'resident_evil_01', name: 'Grace', series: 'resident_evil' },
+    { id: 'resident_evil_02', name: 'Leon', series: 'resident_evil' },
 
     // Pragmata Series
     { id: 'pragmata_01', name: 'Diana', series: 'pragmata' }

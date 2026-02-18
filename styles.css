@@ -26,7 +26,7 @@
     --color-not-owned: #999999;
     --color-unboxed: #4caf50;
     --color-sealed: #ffa726;
-    --color-amiibo-red: #e60012;
+    --color-amiibo-red: #e6001e;
     --color-info: #2196f3;
     --color-import: #9c27b0;
     --color-delete: #f44336;
@@ -34,6 +34,10 @@
     --color-warning: #ff9800;
     --color-neutral: #607d8b;
     --color-theme: #ffc107;
+}
+
+body[data-view="cards"] {
+    --color-amiibo-red: #009581;
 }
 
 body.dark-mode {
@@ -205,6 +209,22 @@ h1 {
     min-width: 150px;
 }
 
+.filter-input {
+    flex: 1.5;
+}
+
+#seriesFilter {
+    flex: 1.5;
+}
+
+#stateFilter {
+    flex: 0.5;
+}
+
+#sortFilter {
+    flex: 1;
+}
+
 .filter-input:focus,
 .filter-select:focus {
     outline: none;
@@ -242,6 +262,7 @@ h1 {
     border-color: var(--color-neutral);
     color: var(--color-neutral);
     white-space: nowrap;
+    flex: none;
 }
 
 .reset-filters-btn:hover {
@@ -279,18 +300,6 @@ h1 {
     height: 20px;
     border: 2px solid;
     border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.legend-box::after {
-    content: '×';
-    color: white;
-    font-weight: bold;
-    font-size: 16px;
-    line-height: 1;
 }
 
 .legend-box.grey {
@@ -436,6 +445,10 @@ h1 {
 
 .theme-option.active {
     color: white;
+}
+
+body.dark-mode .theme-option[data-theme="dark"] {
+    color: #333333;
 }
 
 .theme-toggle-slider {

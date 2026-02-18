@@ -3,18 +3,20 @@ let amiiboStatesFigures = {};
 let amiiboStatesCards = {};
 let scrollPositions = { figures: 0, cards: 0 };
 let collapsedSeries = { figures: {}, cards: {} };
+let savedCollapsedSeries = { figures: {}, cards: {} };
 let darkMode = false;
 let filters = {
-    name: '',
-    series: '',
-    state: '',
+    figures: { name: '', series: '', state: '', sort: 'most-amiibo' },
+    cards:   { name: '', series: '', state: '', sort: 'most-amiibo' },
 };
+let isFilterActive = false;
 
 const STORAGE_KEYS = {
     FIGURES: 'amiiboStatesFigures',
     CARDS: 'amiiboStatesCards',
     DARK_MODE: 'amiiboChecklist_darkMode',
-    COLLAPSED_SERIES: 'amiiboChecklist_collapsedSeries'
+    COLLAPSED_SERIES: 'amiiboChecklist_collapsedSeries',
+    FILTERS: 'amiiboChecklist_filters',
 };
 
 function saveToLocalStorage() {
@@ -23,6 +25,11 @@ function saveToLocalStorage() {
         localStorage.setItem(STORAGE_KEYS.CARDS, JSON.stringify(amiiboStatesCards));
         localStorage.setItem(STORAGE_KEYS.DARK_MODE, JSON.stringify(darkMode));
         localStorage.setItem(STORAGE_KEYS.COLLAPSED_SERIES, JSON.stringify(collapsedSeries));
+        const persistedFilters = {
+            figures: { series: filters.figures.series, state: filters.figures.state, sort: filters.figures.sort },
+            cards:   { series: filters.cards.series,   state: filters.cards.state,   sort: filters.cards.sort },
+        };
+        localStorage.setItem(STORAGE_KEYS.FILTERS, JSON.stringify(persistedFilters));
     } catch (e) {
         console.error('Error saving to localStorage:', e);
     }
@@ -34,11 +41,25 @@ function loadFromLocalStorage() {
         const savedCards = localStorage.getItem(STORAGE_KEYS.CARDS);
         const savedDarkMode = localStorage.getItem(STORAGE_KEYS.DARK_MODE);
         const savedCollapsedSeries = localStorage.getItem(STORAGE_KEYS.COLLAPSED_SERIES);
+        const savedFilters = localStorage.getItem(STORAGE_KEYS.FILTERS);
 
         if (savedFigures) amiiboStatesFigures = JSON.parse(savedFigures);
         if (savedCards) amiiboStatesCards = JSON.parse(savedCards);
         if (savedDarkMode !== null) darkMode = JSON.parse(savedDarkMode);
         if (savedCollapsedSeries) collapsedSeries = JSON.parse(savedCollapsedSeries);
+        if (savedFilters) {
+            const parsed = JSON.parse(savedFilters);
+            if (parsed.figures) {
+                filters.figures.series = parsed.figures.series || '';
+                filters.figures.state  = parsed.figures.state  ?? '';
+                filters.figures.sort   = parsed.figures.sort   || 'most-amiibo';
+            }
+            if (parsed.cards) {
+                filters.cards.series = parsed.cards.series || '';
+                filters.cards.state  = parsed.cards.state  ?? '';
+                filters.cards.sort   = parsed.cards.sort   || 'most-amiibo';
+            }
+        }
     } catch (e) {
         console.error('Error loading from localStorage:', e);
     }
@@ -112,6 +133,10 @@ function getCurrentData() {
         : { series: cardSeries, amiibo: amiiboCards, states: amiiboStatesCards };
 }
 
+function getCurrentFilters() {
+    return filters[currentView];
+}
+
 function getCounts(seriesId = null) {
     const data = getCurrentData();
     const items = seriesId ? data.amiibo.filter(a => a.series === seriesId) : data.amiibo;
@@ -126,6 +151,62 @@ function getSeriesCompletion(seriesId) {
     const allCollected = items.every(a => data.states[a.id] > 0);
     const allSealed = items.every(a => data.states[a.id] === 2);
     return { allCollected, allSealed };
+}
+
+function getSortedSeries() {
+    const data = getCurrentData();
+    const f = getCurrentFilters();
+    const seriesWithData = data.series.map(seriesData => {
+        const amiiboInSeries = data.amiibo.filter(a => a.series === seriesData.id);
+        const totalCount = amiiboInSeries.length;
+        const collectedCount = amiiboInSeries.filter(a => data.states[a.id] > 0).length;
+        const collectionPercentage = totalCount > 0 ? (collectedCount / totalCount) * 100 : 0;
+
+        return {
+            ...seriesData,
+            totalCount,
+            collectedCount,
+            collectionPercentage
+        };
+    });
+
+    let sorted = [...seriesWithData];
+
+    switch (f.sort) {
+        case 'most-amiibo':
+            sorted.sort((a, b) => {
+                if (b.totalCount !== a.totalCount) return b.totalCount - a.totalCount;
+                return a.name.localeCompare(b.name);
+            });
+            break;
+        case 'least-amiibo':
+            sorted.sort((a, b) => {
+                if (a.totalCount !== b.totalCount) return a.totalCount - b.totalCount;
+                return a.name.localeCompare(b.name);
+            });
+            break;
+        case 'most-collected':
+            sorted.sort((a, b) => {
+                if (b.collectionPercentage !== a.collectionPercentage) return b.collectionPercentage - a.collectionPercentage;
+                if (b.totalCount !== a.totalCount) return b.totalCount - a.totalCount;
+                return a.name.localeCompare(b.name);
+            });
+            break;
+        case 'least-collected':
+            sorted.sort((a, b) => {
+                if (a.collectionPercentage !== b.collectionPercentage) return a.collectionPercentage - b.collectionPercentage;
+                if (b.totalCount !== a.totalCount) return b.totalCount - a.totalCount;
+                return a.name.localeCompare(b.name);
+            });
+            break;
+        case 'alphabetical':
+            sorted.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+        default:
+            break;
+    }
+
+    return sorted;
 }
 
 function updateCounters() {
@@ -260,12 +341,26 @@ function toggleSeriesCollapse(seriesId) {
 
 function matchesFilters(amiiboItem) {
     const data = getCurrentData();
+    const f = getCurrentFilters();
 
-    if (filters.name && !amiiboItem.name.toLowerCase().includes(filters.name.toLowerCase())) return false;
-    if (filters.series && amiiboItem.series !== filters.series) return false;
-    if (filters.state !== '' && data.states[amiiboItem.id] !== parseInt(filters.state)) return false;
+    if (f.name && !amiiboItem.name.toLowerCase().includes(f.name.toLowerCase())) return false;
+    if (f.series && amiiboItem.series !== f.series) return false;
+    if (f.state !== '' && data.states[amiiboItem.id] !== parseInt(f.state)) return false;
 
     return true;
+}
+
+function hasActiveFilters() {
+    const f = getCurrentFilters();
+    return f.name !== '' || f.series !== '' || f.state !== '';
+}
+
+function saveCurrentCollapseState() {
+    savedCollapsedSeries[currentView] = { ...collapsedSeries[currentView] };
+}
+
+function restoreCollapseState() {
+    collapsedSeries[currentView] = { ...savedCollapsedSeries[currentView] };
 }
 
 function seriesHasVisibleItems(seriesId) {
@@ -329,7 +424,7 @@ function createSeriesHeader(seriesData, isFirstVisible) {
 
         const visibleSeriesIds = getVisibleSeriesIds();
         const allCollapsedNow = visibleSeriesIds.length > 0 && visibleSeriesIds.every(id => collapsedSeries[currentView][id]);
-        if (allCollapsedNow) collapseAllBtn.classList.add('collapsed');
+        if (allCollapsedNow && !isFilterActive) collapseAllBtn.classList.add('collapsed');
 
         collapseAllBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -344,7 +439,7 @@ function createSeriesHeader(seriesData, isFirstVisible) {
     collapseArrow.style.borderLeftColor = seriesData.color;
     collapseArrow.setAttribute('data-arrow-series', seriesData.id);
 
-    const isCollapsed = collapsedSeries[currentView][seriesData.id];
+    const isCollapsed = isFilterActive ? false : (collapsedSeries[currentView][seriesData.id] || false);
     if (isCollapsed) {
         collapseArrow.classList.add('collapsed');
         header.classList.add('collapsed');
@@ -415,14 +510,25 @@ function renderAmiibo() {
 
     let firstVisibleSeries = true;
 
-    data.series.forEach((seriesData, index) => {
+    const sortedSeries = getSortedSeries();
+
+    const wasFilterActive = isFilterActive;
+    isFilterActive = hasActiveFilters();
+
+    if (!wasFilterActive && isFilterActive) {
+        saveCurrentCollapseState();
+    } else if (wasFilterActive && !isFilterActive) {
+        restoreCollapseState();
+    }
+
+    sortedSeries.forEach((seriesData, index) => {
         const amiiboSeries = data.amiibo.filter(a => a.series === seriesData.id);
 
         if (amiiboSeries.length > 0 && seriesHasVisibleItems(seriesData.id)) {
             fragment.appendChild(createSeriesHeader(seriesData, firstVisibleSeries));
             firstVisibleSeries = false;
 
-            const isCollapsed = collapsedSeries[currentView][seriesData.id];
+            const isCollapsed = isFilterActive ? false : (collapsedSeries[currentView][seriesData.id] || false);
 
             amiiboSeries.forEach(amiiboItem => {
                 if (matchesFilters(amiiboItem)) {
@@ -432,7 +538,7 @@ function renderAmiibo() {
                 }
             });
 
-            if (index < data.series.length - 1) {
+            if (index < sortedSeries.length - 1) {
                 const spacer = document.createElement('div');
                 spacer.className = 'series-spacer';
                 fragment.appendChild(spacer);
@@ -444,6 +550,16 @@ function renderAmiibo() {
     grid.appendChild(fragment);
 
     updateCounters();
+}
+
+function applyPersistedFiltersToUI() {
+    const f = getCurrentFilters();
+    document.getElementById('nameSearch').value = f.name;
+    document.getElementById('seriesFilter').value = f.series;
+    document.getElementById('stateFilter').value = f.state;
+    document.getElementById('sortFilter').value = f.sort;
+    updateSeriesFilterColor();
+    updateStateFilterColor();
 }
 
 function populateSeriesFilter() {
@@ -493,12 +609,18 @@ function updateStateFilterColor() {
 }
 
 function resetFilters() {
-    filters = { name: '', series: '', state: '' };
+    const f = getCurrentFilters();
+    f.name = '';
+    f.series = '';
+    f.state = '';
+    f.sort = 'most-amiibo';
     document.getElementById('nameSearch').value = '';
     document.getElementById('seriesFilter').value = '';
     document.getElementById('stateFilter').value = '';
+    document.getElementById('sortFilter').value = 'most-amiibo';
     updateSeriesFilterColor();
     updateStateFilterColor();
+    saveToLocalStorage();
 }
 
 function switchView(view) {
@@ -510,12 +632,14 @@ function switchView(view) {
     currentView = view;
     sessionStorage.setItem('currentView', view);
 
+    document.body.setAttribute('data-view', view);
+
     document.querySelectorAll('.view-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.view === view);
     });
 
-    resetFilters();
     populateSeriesFilter();
+    applyPersistedFiltersToUI();
     requestAnimationFrame(() => {
         renderAmiibo();
         requestAnimationFrame(() => {
@@ -531,19 +655,27 @@ document.querySelectorAll('.view-btn').forEach(btn => {
 });
 
 document.getElementById('nameSearch')?.addEventListener('input', (e) => {
-    filters.name = e.target.value;
+    getCurrentFilters().name = e.target.value;
     renderAmiibo();
 });
 
 document.getElementById('seriesFilter')?.addEventListener('change', (e) => {
-    filters.series = e.target.value;
+    getCurrentFilters().series = e.target.value;
     updateSeriesFilterColor();
+    saveToLocalStorage();
     renderAmiibo();
 });
 
 document.getElementById('stateFilter')?.addEventListener('change', (e) => {
-    filters.state = e.target.value;
+    getCurrentFilters().state = e.target.value;
     updateStateFilterColor();
+    saveToLocalStorage();
+    renderAmiibo();
+});
+
+document.getElementById('sortFilter')?.addEventListener('change', (e) => {
+    getCurrentFilters().sort = e.target.value;
+    saveToLocalStorage();
     renderAmiibo();
 });
 
@@ -552,9 +684,11 @@ document.getElementById('resetFiltersBtn')?.addEventListener('click', () => {
     renderAmiibo();
 });
 
-resetFilters();
 populateSeriesFilter();
+applyPersistedFiltersToUI();
 renderAmiibo();
+
+document.body.setAttribute('data-view', currentView);
 
 document.querySelectorAll('.view-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === currentView);
@@ -611,7 +745,7 @@ function exportData() {
     });
 
     const exportObj = {
-        version: '1.5',
+        version: APP_VERSION,
         exportDate: new Date().toISOString(),
         figures: figuresData,
         cards: cardsData
